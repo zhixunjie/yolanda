@@ -1,6 +1,7 @@
 //
 // Created by shengym on 2019-07-07.
 //
+#define _POSIX_C_SOURCE 200909L
 
 #ifndef YOLANDA_COMMON_H
 #define YOLANDA_COMMON_H

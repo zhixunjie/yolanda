@@ -9,6 +9,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
+# set c std 99PROJECT_SOURCE_DIR
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+
 include_directories(${PROJECT_SOURCE_DIR})
 
 # check epoll and add config.h for the macro compilation
