@@ -33,6 +33,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 add_subdirectory(lib/)
+add_subdirectory(a-jason/)
 add_subdirectory(chap-4/)
 add_subdirectory(chap-5/)
 add_subdirectory(chap-6/)
