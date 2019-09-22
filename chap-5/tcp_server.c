@@ -1,3 +1,5 @@
+//netstat -ltnp
+//telnet 127.0.0.1 12345
 #include "lib/common.h"
 
 void read_data(int sockfd) {
