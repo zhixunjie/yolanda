@@ -1,7 +1,5 @@
-//
-// Created by shengym on 2019-07-15.
-//
-
+// 创建本地套接字
+// 本地数据报套接字
 #include  "lib/common.h"
 
 

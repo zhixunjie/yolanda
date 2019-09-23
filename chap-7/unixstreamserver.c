@@ -1,7 +1,8 @@
-//
-// Created by shengym on 2019-07-14.
-//
-
+// 创建本地套接字
+// 本地字节流套接字
+// 相关命令：
+// ./unixstreamserver /tmp/unixstream.sock
+// ps -ef | grep unixstreamserver
 #include  "lib/common.h"
 
 
