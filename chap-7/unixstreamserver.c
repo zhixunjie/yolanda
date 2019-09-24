@@ -1,5 +1,4 @@
-// 创建本地套接字
-// 本地字节流套接字
+// 创建本地套接字(字节流)
 // 相关命令：
 // ./unixstreamserver /tmp/unixstream.sock
 // ps -ef | grep unixstreamserver

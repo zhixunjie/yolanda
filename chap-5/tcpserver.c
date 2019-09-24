@@ -1,6 +1,10 @@
 //TCP服务器
+//用于测试功能,如：测试tcpdump
 //netstat -ltnp
 //telnet 127.0.0.1 12345
+
+//tcpdump -i lo -nnS tcp and port 12345
+//tcpdump -i lo -nnvvS tcp and port 12345
 #include "lib/common.h"
 
 void read_data(int sockfd) {

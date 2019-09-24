@@ -1,7 +1,7 @@
 //TCP客户端
 #include "lib/common.h"
 
-# define MESSAGE_SIZE 102400
+# define MESSAGE_SIZE 10240000
 
 void send_data(int sockfd) {
     char *query;
