@@ -1,6 +1,5 @@
-//
-// Created by shengym on 2019-07-07.
-//
+//设置地址重用的情况
+// telnet 127.0.0.1 43211
 
 #include "lib/common.h"
 
