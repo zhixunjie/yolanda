@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
             return -1;
         }
         count--;
+
+//        sleep(4);//加sleep和不加sleep会有不同的报错
     }
     return 0;
 }
