@@ -1,7 +1,3 @@
-//
-// Created by shengym on 2019-07-07.
-//
-
 #include "lib/common.h"
 
 

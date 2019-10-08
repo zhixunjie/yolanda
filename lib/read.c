@@ -4,8 +4,8 @@ size_t readn(int fd, void *buffer, size_t size) {
     char *buffer_pointer = buffer;
     int length = size;
 
-    while (length > 0) {
-        int result = read(fd, buffer_pointer, length);
+    while (length > 0) {// 一直循环直到读到EOF
+        int result = read(fd, buffer_pointer, length);//缓冲区为空则进入阻塞
 
         if (result < 0) {
             if (errno == EINTR)
@@ -75,6 +75,13 @@ size_t readline(int fd, char *buffer, size_t length) {
     return -1;
 }
 
+/**
+ * 读取结构体格式的消息
+ * @param fd
+ * @param buffer
+ * @param length
+ * @return
+ */
 size_t read_message(int fd, char *buffer, size_t length) {
     u_int32_t msg_length;
     u_int32_t msg_type;
@@ -82,12 +89,12 @@ size_t read_message(int fd, char *buffer, size_t length) {
 
     /* Retrieve the length of the record */
 
-    rc = readn(fd, (char *) &msg_length, sizeof(u_int32_t));
+    rc = readn(fd, (char *) &msg_length, sizeof(u_int32_t));// 获取消息长度
     if (rc != sizeof(u_int32_t))
         return rc < 0 ? -1 : 0;
     msg_length = ntohl(msg_length);
 
-    rc = readn(fd, (char *) &msg_type, sizeof(msg_type));
+    rc = readn(fd, (char *) &msg_type, sizeof(msg_type));//获取消息类型
     if (rc != sizeof(u_int32_t))
         return rc < 0 ? -1 : 0;
 
@@ -97,13 +104,19 @@ size_t read_message(int fd, char *buffer, size_t length) {
     }
 
     /* Retrieve the record itself */
-    rc = readn(fd, buffer, msg_length);
+    rc = readn(fd, buffer, msg_length);// 获取消息的内容部分
     if (rc != msg_length)
         return rc < 0 ? -1 : 0;
     return rc;
 }
 
-
+/**
+ * 读取一行,以\n或\r\n为分隔符
+ * @param fd
+ * @param buf
+ * @param size
+ * @return
+ */
 int read_line(int fd, char *buf, int size) {
     int i = 0;
     char c = '\0';

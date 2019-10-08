@@ -1,4 +1,4 @@
-//
+// 把不同的应用缓冲区数据,批量写入发送缓冲区
 #include "lib/common.h"
 
 int main(int argc, char **argv) {

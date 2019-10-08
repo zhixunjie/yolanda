@@ -1,7 +1,3 @@
-//
-// Created by shengym on 2019-07-07.
-//
-
 #include "lib/common.h"
 
 
@@ -18,7 +14,7 @@ int main(int argc, char **argv) {
         } else if (n == 0) {
             error(1, 0, "client closed \n");
         }
-
+        printf("read %d bytes\n", n);
         sleep(5);
 
         int write_nc = send(connfd, buf, n, 0);
