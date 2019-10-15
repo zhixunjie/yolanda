@@ -1,11 +1,9 @@
 // 测试：close和shutdown的效果
+// 测试1:连续输入data1,data2,close(在服务端返回Hi data1之前完成输入),得到的结果是：server在第二次调用write时触发SIGPIPE信号
+// 测试2:连续输入data1,data2,shutdown(在服务端返回Hi data1之前完成输入),得到的结果是：client调用shutdown时发送了FIN,服务端读到EOF后,立即退出向客户端发送FIN，客户端在read函数感知了EOF，也进行了正常退出。
 # include "lib/common.h"
 
 # define    MAXLINE     4096
-
-static void sig_call_back(int signo) {
-    printf("get signal SIGPIPE\n");
-}
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -20,8 +18,6 @@ int main(int argc, char **argv) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERV_PORT);
     inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
-
-    signal(SIGPIPE, sig_call_back);
 
     socklen_t server_len = sizeof(server_addr);
     int connect_rt = connect(socket_fd, (struct sockaddr *) &server_addr, server_len);

@@ -7,7 +7,7 @@
 static int count;
 
 static void sig_int(int signo) {
-    printf("\nreceived %d datagrams\n", count);
+    printf("\nsignal=%d,received %d datagrams\n", signo, count);
     exit(0);
 }
 
@@ -32,8 +32,8 @@ int main(int argc, char **argv) {
         error(1, errno, "listen failed ");
     }
 
-    signal(SIGINT, sig_int);
-    signal(SIGPIPE, SIG_DFL);
+//    signal(SIGINT, sig_int);
+    signal(SIGPIPE, sig_int);
 
     int connfd;
     struct sockaddr_in client_addr;
