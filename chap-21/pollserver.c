@@ -1,3 +1,5 @@
+// 使用poll实现的服务器
+// telnet 127.0.0.1 43211
 #include "lib/common.h"
 
 #define INIT_SIZE 128
@@ -27,7 +29,7 @@ int main(int argc, char **argv) {
             error(1, errno, "poll failed ");
         }
 
-        if (event_set[0].revents & POLLRDNORM) {
+        if (event_set[0].revents & POLLRDNORM) {//是否有新的连接,有则调用accept
             socklen_t client_len = sizeof(client_addr);
             connected_fd = accept(listen_fd, (struct sockaddr *) &client_addr, &client_len);
 
@@ -52,7 +54,7 @@ int main(int argc, char **argv) {
             int socket_fd;
             if ((socket_fd = event_set[i].fd) < 0)
                 continue;
-            if (event_set[i].revents & (POLLRDNORM | POLLERR)) {
+            if (event_set[i].revents & (POLLRDNORM | POLLERR)) {// 是否有客户端数据,有则调用read
                 if ((n = read(socket_fd, buf, MAXLINE)) > 0) {
                     if (write(socket_fd, buf, n) < 0) {
                         error(1, errno, "write error");

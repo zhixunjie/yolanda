@@ -1,6 +1,11 @@
+// 测试：close和shutdown的效果
 # include "lib/common.h"
 
 # define    MAXLINE     4096
+
+static void sig_call_back(int signo) {
+    printf("get signal SIGPIPE\n");
+}
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -15,6 +20,8 @@ int main(int argc, char **argv) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERV_PORT);
     inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
+
+    signal(SIGPIPE, sig_call_back);
 
     socklen_t server_len = sizeof(server_addr);
     int connect_rt = connect(socket_fd, (struct sockaddr *) &server_addr, server_len);
@@ -49,19 +56,19 @@ int main(int argc, char **argv) {
         }
         if (FD_ISSET(0, &readmask)) {
             if (fgets(send_line, MAXLINE, stdin) != NULL) {
-                if (strncmp(send_line, "shutdown", 8) == 0) {
+                if (strncmp(send_line, "shutdown", 8) == 0) {//执行：shutdown
                     FD_CLR(0, &allreads);
                     if (shutdown(socket_fd, 1)) {
                         error(1, errno, "shutdown failed");
                     }
-                } else if (strncmp(send_line, "close", 5) == 0) {
+                } else if (strncmp(send_line, "close", 5) == 0) {//执行：close
                     FD_CLR(0, &allreads);
                     if (close(socket_fd)) {
                         error(1, errno, "close failed");
                     }
                     sleep(6);
                     exit(0);
-                } else {
+                } else {//发送数据到服务端
                     int i = strlen(send_line);
                     if (send_line[i - 1] == '\n') {
                         send_line[i - 1] = 0;

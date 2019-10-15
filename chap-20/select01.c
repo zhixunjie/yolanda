@@ -1,3 +1,4 @@
+// 使用select实现的客户端
 #include "lib/common.h"
 
 #define  MAXLINE     1024
