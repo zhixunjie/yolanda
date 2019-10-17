@@ -1,3 +1,4 @@
+//基于poll实现的服务器(pollserver.c的进一步封装)
 #include "lib/common.h"
 
 #define INIT_SIZE 24

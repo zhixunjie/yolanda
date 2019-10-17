@@ -14,7 +14,7 @@ char rot13_char(char c) {
 
 //数据缓冲区
 struct Buffer {
-    int connect_fd;  //连接字
+    int connect_fd;         //记录连接的fd
     char buffer[MAX_LINE];  //实际缓冲
     size_t writeIndex;      //缓冲写入位置
     size_t readIndex;       //缓冲读取位置
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 
         for (i = 0; i < FD_INIT_SIZE; ++i) {
             if (buffer[i]->connect_fd > 0) {
-                if (buffer[i]->connect_fd > maxfd)
+                if (buffer[i]->connect_fd > maxfd)//记录最大的fd
                     maxfd = buffer[i]->connect_fd;
                 FD_SET(buffer[i]->connect_fd, &readset);
                 if (buffer[i]->readable) {
