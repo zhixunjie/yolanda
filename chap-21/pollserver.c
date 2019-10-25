@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     event_set[0].fd = listen_fd;
     event_set[0].events = POLLRDNORM;
 
-    // 用-1表示这个数组位置还没有被占用
+    // -1表示这个数组位置还没有被占用,fd设置为负数不会被poll监测
     int i;
     for (i = 1; i < INIT_SIZE; i++) {
         event_set[i].fd = -1;
