@@ -54,7 +54,12 @@ void *poll_init(struct event_loop *eventLoop) {
     return pollDispatcherData;
 }
 
-
+/**
+ * 添加监听的事件
+ * @param eventLoop
+ * @param channel1
+ * @return
+ */
 int poll_add(struct event_loop *eventLoop, struct channel *channel1) {
 
     struct poll_dispatcher_data *pollDispatcherData = (struct poll_dispatcher_data *) eventLoop->event_dispatcher_data;
@@ -88,6 +93,12 @@ int poll_add(struct event_loop *eventLoop, struct channel *channel1) {
     return 0;
 }
 
+/**
+ * 删除监听的事件
+ * @param eventLoop
+ * @param channel1
+ * @return
+ */
 int poll_del(struct event_loop *eventLoop, struct channel *channel1) {
     struct poll_dispatcher_data *pollDispatcherData = (struct poll_dispatcher_data *) eventLoop->event_dispatcher_data;
     int fd = channel1->fd;
@@ -109,6 +120,12 @@ int poll_del(struct event_loop *eventLoop, struct channel *channel1) {
     return 0;
 }
 
+/**
+ * 更新监听的事件
+ * @param eventLoop
+ * @param channel1
+ * @return
+ */
 int poll_update(struct event_loop *eventLoop, struct channel *channel1) {
     struct poll_dispatcher_data *pollDispatcherData = (struct poll_dispatcher_data *) eventLoop->event_dispatcher_data;
 
@@ -140,6 +157,13 @@ int poll_update(struct event_loop *eventLoop, struct channel *channel1) {
     return 0;
 }
 
+/**
+ * 事件分发
+ * 检查某个fd准备好的事件,并执行对应的事件回调函数
+ * @param eventLoop
+ * @param timeval
+ * @return
+ */
 int poll_dispatch(struct event_loop *eventLoop, struct timeval *timeval) {
     struct poll_dispatcher_data *pollDispatcherData =
             (struct poll_dispatcher_data *) eventLoop->event_dispatcher_data;
@@ -162,14 +186,16 @@ int poll_dispatch(struct event_loop *eventLoop, struct timeval *timeval) {
         if ((socket_fd = pollfd.fd) < 0)
             continue;
 
-        //有事件发生
+        //pollfd.revents > 0表示有事件发生
         if (pollfd.revents > 0) {
             yolanda_msgx("get message channel i==%d, fd==%d, %s", i, socket_fd, eventLoop->thread_name);
 
+            // 读准备
             if (pollfd.revents & POLLRDNORM) {
                 channel_event_activate(eventLoop, socket_fd, EVENT_READ);
             }
 
+            // 写准备
             if (pollfd.revents & POLLWRNORM) {
                 channel_event_activate(eventLoop, socket_fd, EVENT_WRITE);
             }

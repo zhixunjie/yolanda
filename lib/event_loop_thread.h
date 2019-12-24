@@ -4,8 +4,8 @@
 #include    <pthread.h>
 
 struct event_loop_thread {
-    struct event_loop *eventLoop;
-    pthread_t thread_tid;        /* thread ID */
+    struct event_loop *eventLoop;    // 每个线程维护一个event_loop对象
+    pthread_t thread_tid;            // 线程id
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     char * thread_name;

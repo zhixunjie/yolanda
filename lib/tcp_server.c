@@ -127,7 +127,11 @@ tcp_server_init(struct event_loop *eventLoop, struct acceptor *acceptor,
     return tcpServer;
 }
 
-
+/**
+ * 监听套接字遇到读事件后的回调函数(新的tcp连接)
+ * @param data
+ * @return
+ */
 int handle_connection_established(void *data) {
     struct TCPserver *tcpServer = (struct TCPserver *) data;
     struct acceptor *acceptor = tcpServer->acceptor;
@@ -165,10 +169,10 @@ void tcp_server_start(struct TCPserver *tcpServer) {
     //开启多个线程
     thread_pool_start(tcpServer->threadPool);
 
-    //acceptor主线程， 同时把tcpServer作为参数传给channel对象
     struct channel *channel = channel_new(acceptor->listen_fd, EVENT_READ, handle_connection_established, NULL,
                                           tcpServer);
-    event_loop_add_channel_event(eventLoop, channel->fd, channel);
+    // 把listen fd添加到poll or epoll的监控事件集合中
+    event_loop_add_channel_event(eventLoop, acceptor->listen_fd, channel);
     return;
 }
 

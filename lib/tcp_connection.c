@@ -55,6 +55,16 @@ int handle_write(void *data) {
 
 }
 
+/**
+ * 创建tcp_connection对象
+ * @param connected_fd
+ * @param eventLoop
+ * @param connectionCompletedCallBack
+ * @param connectionClosedCallBack
+ * @param messageCallBack
+ * @param writeCompletedCallBack
+ * @return
+ */
 struct tcp_connection *
 tcp_connection_new(int connected_fd, struct event_loop *eventLoop,
                    connection_completed_call_back connectionCompletedCallBack,
@@ -83,6 +93,7 @@ tcp_connection_new(int connected_fd, struct event_loop *eventLoop,
         tcpConnection->connectionCompletedCallBack(tcpConnection);
     }
 
+    //把connected_fd添加到poll or epoll的监控事件集合中
     event_loop_add_channel_event(tcpConnection->eventLoop, connected_fd, tcpConnection->channel);
     return tcpConnection;
 }

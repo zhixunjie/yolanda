@@ -9,34 +9,39 @@
 extern const struct event_dispatcher poll_dispatcher;
 extern const struct event_dispatcher epoll_dispatcher;
 
+/**
+ * 存放channel的链表
+ */
 struct channel_element {
     int type; //1: add  2: delete
     struct channel *channel;
     struct channel_element *next;
 };
 
+/**
+ * event loop对象
+ */
 struct event_loop {
     int quit;
-    const struct event_dispatcher *eventDispatcher;
+    const struct event_dispatcher *eventDispatcher; // 事件分发对象,可以指定poll或epoll
 
-    /** 对应的event_dispatcher的数据. */
-    void *event_dispatcher_data;
+    void *event_dispatcher_data;          // 对应的event_dispatcher的数据
     struct channel_map *channelMap;
 
     int is_handle_pending;
-    struct channel_element *pending_head;
-    struct channel_element *pending_tail;
+    struct channel_element *pending_head; // 记录链表头,链表用于存放待处理的channel事件
+    struct channel_element *pending_tail; // 记录链表尾
 
-    pthread_t owner_thread_id;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    int socketPair[2];
-    char *thread_name;
+    pthread_t owner_thread_id;            // 记录拥有此event loop对象的线程id
+    pthread_mutex_t mutex;                // 互斥锁,用于配合条件变量使用
+    pthread_cond_t cond;                  // 条件变量
+    int socketPair[2];                    // 本地套接字,父线程用来通知子线程有新的事件需要处理。本项目中sockPair[0]用于写入,sockPair[1]用于读取。
+    char *thread_name;                    // 记录线程的名字
 };
 
 struct event_loop *event_loop_init();
 
-struct event_loop *event_loop_init_with_name(char * thread_name);
+struct event_loop *event_loop_init_with_name(char *thread_name);
 
 int event_loop_run(struct event_loop *eventLoop);
 

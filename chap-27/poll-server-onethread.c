@@ -1,3 +1,6 @@
+/**
+ * single reactor模式(使用poll)
+ */
 #include <lib/acceptor.h>
 #include "lib/common.h"
 #include "lib/event_loop.h"
@@ -45,17 +48,17 @@ int onConnectionClosed(struct tcp_connection *tcpConnection) {
 }
 
 int main(int c, char **v) {
-    //主线程event_loop
+    // 主线程event_loop
     struct event_loop *eventLoop = event_loop_init();
 
-    //初始化acceptor
+    // 初始化acceptor
     struct acceptor *acceptor = acceptor_init(SERV_PORT);
 
-    //初始tcp_server，可以指定线程数目，如果线程是0，就只有一个线程，既负责acceptor，也负责I/O
+    // 初始tcp_server，可以指定线程数目，如果线程是0，就只有一个线程，既负责acceptor，也负责I/O
     struct TCPserver *tcpServer = tcp_server_init(eventLoop, acceptor, onConnectionCompleted, onMessage,
                                                   onWriteCompleted, onConnectionClosed, 0);
     tcp_server_start(tcpServer);
 
-    // main thread for acceptor
+    // 主线程-事件分发
     event_loop_run(eventLoop);
 }

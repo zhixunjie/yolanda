@@ -19,12 +19,12 @@ typedef int (*event_read_callback)(void *data);
 typedef int (*event_write_callback)(void *data);
 
 struct channel {
-    int fd;
-    int events;   //表示event类型
+    int fd;                                     // 监控的fd
+    int events;                                 // 监控的事件类型
 
-    event_read_callback eventReadCallback;
-    event_write_callback eventWriteCallback;
-    void *data; //callback data, 可能是event_loop，也可能是tcp_server或者tcp_connection
+    event_read_callback eventReadCallback;      // 发生读事件的回调函数
+    event_write_callback eventWriteCallback;    // 发生写事件的回调函数
+    void *data;                                 // 调用回调函数的传参, 可能是event_loop，也可能是tcp_server或者tcp_connection
 };
 
 

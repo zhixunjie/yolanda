@@ -1,3 +1,6 @@
+/**
+ * 主从reactor模式(使用epoll)
+ */
 #include <lib/acceptor.h>
 #include "lib/common.h"
 #include "lib/event_loop.h"

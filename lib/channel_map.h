@@ -5,12 +5,13 @@
 #include "channel.h"
 
 /**
- * channel映射表, key为对应的socket描述字
+ * channel映射表
+ * entries是一个数组,key等于某个fd, value等于该fd对应的channel对象
  */
 struct channel_map {
     void **entries;
 
-    /* The number of entries available in entries */
+    /* The number of entries available in entries*/
     int nentries;
 };
 

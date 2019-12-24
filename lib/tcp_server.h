@@ -17,14 +17,14 @@ typedef int (*connection_closed_call_back)(struct tcp_connection *tcpConnection)
 
 struct TCPserver {
     int port;
-    struct event_loop *eventLoop;
-    struct acceptor *acceptor;
-    connection_completed_call_back connectionCompletedCallBack;
+    struct event_loop *eventLoop;                                     // 记录event_loop对象
+    struct acceptor *acceptor;                                        // 记录accepter对象
+    connection_completed_call_back connectionCompletedCallBack;       // 记录回调函数
     message_call_back messageCallBack;
     write_completed_call_back writeCompletedCallBack;
     connection_closed_call_back connectionClosedCallBack;
-    int threadNum;
-    struct thread_pool *threadPool;
+    int threadNum;                                                    // 记录线程数目
+    struct thread_pool *threadPool;                                   // 记录线程池
     void * data; //for callback use: http_server
 };
 

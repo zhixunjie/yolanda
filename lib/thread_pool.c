@@ -13,7 +13,10 @@ struct thread_pool *thread_pool_new(struct event_loop *mainLoop, int threadNumbe
     return threadPool;
 }
 
-//一定是main thread发起
+/*
+ * 开始线程池
+ * 一定是main thread发起
+ */
 void thread_pool_start(struct thread_pool *threadPool) {
     assert(!threadPool->started);
     assertInSameThread(threadPool->mainLoop);
@@ -26,13 +29,20 @@ void thread_pool_start(struct thread_pool *threadPool) {
     }
 
     threadPool->eventLoopThreads = malloc(threadPool->thread_number * sizeof(struct event_loop_thread));
+
+    // 创建指定数目的线程并执行线程逻辑
     for (int i = 0; i < threadPool->thread_number; ++i) {
         event_loop_thread_init(&threadPool->eventLoopThreads[i], i);
         event_loop_thread_start(&threadPool->eventLoopThreads[i]);
     }
 }
 
-//一定是main thread中选择
+/**
+ * 选择主线程或线程池中任一线程的event loop对象处理该TCP连接以后的IO事件
+ * 一定是main thread中调用此函数
+ * @param threadPool
+ * @return
+ */
 struct event_loop *thread_pool_get_loop(struct thread_pool *threadPool) {
     assert(threadPool->started);
     assertInSameThread(threadPool->mainLoop);
@@ -40,7 +50,7 @@ struct event_loop *thread_pool_get_loop(struct thread_pool *threadPool) {
     //优先选择当前主线程
     struct event_loop *selected = threadPool->mainLoop;
 
-    //从线程池中按照顺序挑选出一个线程
+    //从线程池中按照顺序挑选出一个线程(轮询选择)
     if (threadPool->thread_number > 0) {
         selected = threadPool->eventLoopThreads[threadPool->position].eventLoop;
         if (++threadPool->position >= threadPool->thread_number) {

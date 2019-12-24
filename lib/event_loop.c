@@ -6,15 +6,16 @@
 #include "channel.h"
 #include "utils.h"
 
-// in the i/o thread
+// 修改poll or epoll监控的事件
+// 遍历event loop的链表,处理每一个channel对象
 int event_loop_handle_pending_channel(struct event_loop *eventLoop) {
     //get the lock
     pthread_mutex_lock(&eventLoop->mutex);
     eventLoop->is_handle_pending = 1;
 
     struct channel_element *channelElement = eventLoop->pending_head;
+    // 遍历event loop对象的channel链表
     while (channelElement != NULL) {
-        //save into event_map
         struct channel *channel = channelElement->channel;
         int fd = channel->fd;
         if (channelElement->type == 1) {
@@ -36,6 +37,13 @@ int event_loop_handle_pending_channel(struct event_loop *eventLoop) {
     return 0;
 }
 
+/**
+ * 添加channel到eventLoop的channel链表中
+ * @param eventLoop
+ * @param fd
+ * @param channel1
+ * @param type
+ */
 void event_loop_channel_buffer_nolock(struct event_loop *eventLoop, int fd, struct channel *channel1, int type) {
     //add channel into the pending list
     struct channel_element *channelElement = malloc(sizeof(struct channel_element));
@@ -51,16 +59,23 @@ void event_loop_channel_buffer_nolock(struct event_loop *eventLoop, int fd, stru
     }
 }
 
+// 先把channel添加到event loop的链表中,后续再处理
 int event_loop_do_channel_event(struct event_loop *eventLoop, int fd, struct channel *channel1, int type) {
     //get the lock
     pthread_mutex_lock(&eventLoop->mutex);
     assert(eventLoop->is_handle_pending == 0);
+
+    //往该线程的channel列表里增加新的channel
     event_loop_channel_buffer_nolock(eventLoop, fd, channel1, type);
+
     //release the lock
     pthread_mutex_unlock(&eventLoop->mutex);
+
+    // 如果是主线程发起操作，则调用event_loop_wakeup唤醒子线程
     if (!isInSameThread(eventLoop)) {
         event_loop_wakeup(eventLoop);
     } else {
+        //如果是子线程自己，则直接可以操作
         event_loop_handle_pending_channel(eventLoop);
     }
 
@@ -68,6 +83,8 @@ int event_loop_do_channel_event(struct event_loop *eventLoop, int fd, struct cha
 
 }
 
+// 添加channel到channel map,并加入到poll or epoll的监控事件集合中
+// 先加入到链表,函数 event_loop_handle_pending_channel 才是真正处理的时刻
 int event_loop_add_channel_event(struct event_loop *eventLoop, int fd, struct channel *channel1) {
     return event_loop_do_channel_event(eventLoop, fd, channel1, 1);
 }
@@ -80,7 +97,11 @@ int event_loop_update_channel_event(struct event_loop *eventLoop, int fd, struct
     return event_loop_do_channel_event(eventLoop, fd, channel1, 3);
 }
 
-// in the i/o thread
+// 添加channel map的映射(fd对应的channel对象),并加入到poll or epoll的监控事件集合中
+// 场景:(查找调用函数 event_loop_add_channel_event 的地方)
+// 1. 创建线程时,添加对eventLoop->socketPair[1]进行事件监听(读事件)
+// 2. 进入tcp监听时,添加对listen fd进行事件监听
+// 3. 有新的tcp连接时,添加对accept的fd进行事件监听
 int event_loop_handle_pending_add(struct event_loop *eventLoop, int fd, struct channel *channel) {
     yolanda_msgx("add channel fd == %d, %s", fd, eventLoop->thread_name);
     struct channel_map *map = eventLoop->channelMap;
@@ -93,7 +114,7 @@ int event_loop_handle_pending_add(struct event_loop *eventLoop, int fd, struct c
             return (-1);
     }
 
-    //第一次创建，增加
+    //添加fd与channel的映射
     if ((map)->entries[fd] == NULL) {
         map->entries[fd] = channel;
         //add channel
@@ -105,7 +126,7 @@ int event_loop_handle_pending_add(struct event_loop *eventLoop, int fd, struct c
     return 0;
 }
 
-// in the i/o thread
+// 删除channel map的映射
 int event_loop_handle_pending_remove(struct event_loop *eventLoop, int fd, struct channel *channel1) {
     struct channel_map *map = eventLoop->channelMap;
     assert(fd == channel1->fd);
@@ -132,7 +153,7 @@ int event_loop_handle_pending_remove(struct event_loop *eventLoop, int fd, struc
     return retval;
 }
 
-// in the i/o thread
+// 更新channel map的映射
 int event_loop_handle_pending_update(struct event_loop *eventLoop, int fd, struct channel *channel) {
     yolanda_msgx("update channel fd == %d, %s", fd, eventLoop->thread_name);
     struct channel_map *map = eventLoop->channelMap;
@@ -149,6 +170,8 @@ int event_loop_handle_pending_update(struct event_loop *eventLoop, int fd, struc
     eventDispatcher->update(eventLoop, channel);
 }
 
+// 激活channel的事件回调
+// fd准备好某个事件后,调用此函数执行该事件的回调函数
 int channel_event_activate(struct event_loop *eventLoop, int fd, int revents) {
     struct channel_map *map = eventLoop->channelMap;
     yolanda_msgx("activate channel fd == %d, revents=%d, %s", fd, revents, eventLoop->thread_name);
@@ -172,6 +195,7 @@ int channel_event_activate(struct event_loop *eventLoop, int fd, int revents) {
 
 }
 
+// 通过本地套接字向子进程发送消息
 void event_loop_wakeup(struct event_loop *eventLoop) {
     char one = 'a';
     ssize_t n = write(eventLoop->socketPair[0], &one, sizeof one);
@@ -180,6 +204,9 @@ void event_loop_wakeup(struct event_loop *eventLoop) {
     }
 }
 
+// 本地套接字触发读事件时的回调函数
+// 子线程醒来后,执行此回调函数.
+// 执行完毕后,会接着执行函数 event_loop_run 中的函数 event_loop_handle_pending_channel
 int handleWakeup(void *data) {
     struct event_loop *eventLoop = (struct event_loop *) data;
     char one;
@@ -194,6 +221,8 @@ struct event_loop *event_loop_init() {
     return event_loop_init_with_name(NULL);
 }
 
+// 每个线程都有一个event_loop对象
+// 使用此函数完成event_loop对象的初始化工作
 struct event_loop *event_loop_init_with_name(char *thread_name) {
     struct event_loop *eventLoop = malloc(sizeof(struct event_loop));
     pthread_mutex_init(&eventLoop->mutex, NULL);
@@ -227,17 +256,16 @@ struct event_loop *event_loop_init_with_name(char *thread_name) {
     eventLoop->pending_head = NULL;
     eventLoop->pending_tail = NULL;
 
+    // 指定socketPair[1]发生读事件时的回调函数
     struct channel *channel = channel_new(eventLoop->socketPair[1], EVENT_READ, handleWakeup, NULL, eventLoop);
-    event_loop_add_channel_event(eventLoop, eventLoop->socketPair[0], channel);
+    // 把 eventLoop->socketPair[1] 添加到poll or epoll的监控事件集合中
+    event_loop_add_channel_event(eventLoop, eventLoop->socketPair[1], channel);
 
     return eventLoop;
 }
 
-/**
- *
- * 1.参数验证
- * 2.调用dispatcher来进行事件分发,分发完回调事件处理函数
- */
+// 进入事件循环
+// 调用dispatch函数进行事件分发,遇到IO执行执行对应的回调函数
 int event_loop_run(struct event_loop *eventLoop) {
     assert(eventLoop != NULL);
 
@@ -251,11 +279,13 @@ int event_loop_run(struct event_loop *eventLoop) {
     struct timeval timeval;
     timeval.tv_sec = 1;
 
+    // 进入循环
     while (!eventLoop->quit) {
-        //block here to wait I/O event, and get active channels
+        // 阻塞等待IO事件,当有IO事件时,触发对应的回调含糊
         dispatcher->dispatch(eventLoop, &timeval);
 
-        //handle the pending channel
+        // 修改poll or epoll监控的事件集合
+        // 如果是子线程被唤醒(socketPair[1]的读事件)，这部分也会立即执行到
         event_loop_handle_pending_channel(eventLoop);
     }
 

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include "channel_map.h"
 
-
+// 扩充channel map的空间
 int map_make_space(struct channel_map *map, int slot, int msize) {
     if (map->nentries <= slot) {
         int nentries = map->nentries ? map->nentries : 32;
@@ -24,6 +24,7 @@ int map_make_space(struct channel_map *map, int slot, int msize) {
     return (0);
 }
 
+// 初始化channel map
 void map_init(struct channel_map *map) {
     map->nentries = 0;
     map->entries = NULL;

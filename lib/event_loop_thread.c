@@ -2,6 +2,11 @@
 #include "event_loop_thread.h"
 #include "event_loop.h"
 
+/**
+ * 子线程的入口
+ * @param arg
+ * @return
+ */
 void *event_loop_thread_run(void *arg) {
     struct event_loop_thread *eventLoopThread = (struct event_loop_thread *) arg;
 
@@ -14,7 +19,7 @@ void *event_loop_thread_run(void *arg) {
 
     pthread_mutex_unlock(&eventLoopThread->mutex);
 
-    //子线程event loop run
+    //子线程event loop run,子进程进入事件循环
     event_loop_run(eventLoopThread->eventLoop);
 }
 
@@ -34,12 +39,17 @@ int event_loop_thread_init(struct event_loop_thread *eventLoopThread, int i) {
 }
 
 
-//由主线程调用，初始化一个子线程，并且让子线程开始运行event_loop
+/**
+ * 由主线程调用,创建子线程,并执行子线程逻辑
+ * @param eventLoopThread
+ * @return
+ */
 struct event_loop *event_loop_thread_start(struct event_loop_thread *eventLoopThread) {
     pthread_create(&eventLoopThread->thread_tid, NULL, &event_loop_thread_run, eventLoopThread);
 
     assert(pthread_mutex_lock(&eventLoopThread->mutex) == 0);
 
+    // 主线程等待子线程调用pthread_cond_signal后继续运行
     while (eventLoopThread->eventLoop == NULL) {
         assert(pthread_cond_wait(&eventLoopThread->cond, &eventLoopThread->mutex) == 0);
     }

@@ -1,6 +1,15 @@
 #include "channel.h"
 
-
+/**
+ * 创建channel
+ * 当fd发生events时,读的回调函数是eventReadCallback,写的回调函数是event_write_callback
+ * @param fd
+ * @param events
+ * @param eventReadCallback
+ * @param eventWriteCallback
+ * @param data
+ * @return
+ */
 struct channel *
 channel_new(int fd, int events, event_read_callback eventReadCallback, event_write_callback eventWriteCallback,
             void *data) {

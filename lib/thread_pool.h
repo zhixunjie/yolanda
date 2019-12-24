@@ -4,6 +4,9 @@
 #include "event_loop.h"
 #include "event_loop_thread.h"
 
+/**
+ * 线程池
+ */
 struct thread_pool {
     //创建thread_pool的主线程
     struct event_loop *mainLoop;
