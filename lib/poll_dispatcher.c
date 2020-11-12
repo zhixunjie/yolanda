@@ -86,7 +86,7 @@ int poll_add(struct event_loop *eventLoop, struct channel *channel1) {
     }
 
     yolanda_msgx("poll added channel fd==%d, %s", fd, eventLoop->thread_name);
-    if (i > INIT_POLL_SIZE) {
+    if (i >= INIT_POLL_SIZE) {
         LOG_ERR("too many clients, just abort it");
     }
 
@@ -113,7 +113,7 @@ int poll_del(struct event_loop *eventLoop, struct channel *channel1) {
     }
 
     yolanda_msgx("poll delete channel fd==%d, %s", fd, eventLoop->thread_name);
-    if (i > INIT_POLL_SIZE) {
+    if (i >= INIT_POLL_SIZE) {
         LOG_ERR("can not find fd, poll delete error");
     }
 
@@ -150,7 +150,7 @@ int poll_update(struct event_loop *eventLoop, struct channel *channel1) {
     }
 
     yolanda_msgx("poll updated channel fd==%d, %s", fd, eventLoop->thread_name);
-    if (i > INIT_POLL_SIZE) {
+    if (i >= INIT_POLL_SIZE) {
         LOG_ERR("can not find fd, poll updated error");
     }
 
@@ -180,7 +180,7 @@ int poll_dispatch(struct event_loop *eventLoop, struct timeval *timeval) {
     }
 
     int i;
-    for (i = 0; i <= INIT_POLL_SIZE; i++) {
+    for (i = 0; i < INIT_POLL_SIZE; i++) {
         int socket_fd;
         struct pollfd pollfd = pollDispatcherData->event_set[i];
         if ((socket_fd = pollfd.fd) < 0)
