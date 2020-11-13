@@ -3,6 +3,10 @@
 
 const char *CRLF = "\r\n";
 
+/**
+ * 初始化缓冲区
+ * @return
+ */
 struct buffer *buffer_new() {
     struct buffer *buffer1 = malloc(sizeof(struct buffer));
     if (!buffer1)
@@ -15,6 +19,10 @@ struct buffer *buffer_new() {
     return buffer1;
 }
 
+/**
+ * 释放buffer
+ * @param buf
+ */
 void buffer_free(struct buffer *buffer1) {
     free(buffer1->data);
     free(buffer1);
@@ -32,6 +40,11 @@ int buffer_front_spare_size(struct buffer *buffer) {
     return buffer->readIndex;
 }
 
+/**
+ * 自动扩容
+ * @param buf
+ * @param size
+ */
 void make_room(struct buffer *buffer, int size) {
     if (buffer_writeable_size(buffer) >= size) {
         return;
@@ -56,6 +69,7 @@ void make_room(struct buffer *buffer, int size) {
     }
 }
 
+// 往buffer里写数据
 int buffer_append(struct buffer *buffer, void *data, int size) {
     if (data != NULL) {
         make_room(buffer, size);
@@ -65,12 +79,14 @@ int buffer_append(struct buffer *buffer, void *data, int size) {
     }
 }
 
+// 往buffer里写数据
 int buffer_append_char(struct buffer *buffer, char data) {
     make_room(buffer, 1);
     //拷贝数据到可写空间中
     buffer->data[buffer->writeIndex++] = data;
 }
 
+// 往buffer里写数据
 int buffer_append_string(struct buffer *buffer, char *data) {
     if (data != NULL) {
         int size = strlen(data);
@@ -78,7 +94,7 @@ int buffer_append_string(struct buffer *buffer, char *data) {
     }
 }
 
-
+// 读socket数据，往buffer里写
 int buffer_socket_read(struct buffer *buffer, int fd) {
     char additional_buffer[INIT_BUFFER_SIZE];
     struct iovec vec[2];
@@ -99,12 +115,14 @@ int buffer_socket_read(struct buffer *buffer, int fd) {
     return result;
 }
 
+// 读buffer数据
 char buffer_read_char(struct buffer *buffer) {
     char c = buffer->data[buffer->readIndex];
     buffer->readIndex++;
     return c;
 }
 
+// 查询buffer数据
 char *buffer_find_CRLF(struct buffer *buffer) {
     char *crlf = memmem(buffer->data + buffer->readIndex, buffer_readable_size(buffer), CRLF, 2);
     return crlf;

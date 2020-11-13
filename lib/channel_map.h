@@ -6,12 +6,14 @@
 
 /**
  * channel映射表
- * entries是一个数组,key等于某个fd, value等于该fd对应的channel对象
  */
 struct channel_map {
+    // entries是一个数组。
+    // - key等于某个fd
+    // - value等于该fd对应的channel对象
     void **entries;
 
-    /* The number of entries available in entries*/
+    // entries数组里面的可用数目
     int nentries;
 };
 

@@ -6,8 +6,12 @@
 #include "channel.h"
 #include "utils.h"
 
-// 修改poll or epoll监控的事件
-// 遍历event loop的链表,处理每一个channel对象
+/**
+ * 修改poll or epoll监控的事件
+ * - 遍历event loop的链表,处理每一个channel对象
+ * @param eventLoop
+ * @return
+ */
 int event_loop_handle_pending_channel(struct event_loop *eventLoop) {
     //get the lock
     pthread_mutex_lock(&eventLoop->mutex);
@@ -59,7 +63,14 @@ void event_loop_channel_buffer_nolock(struct event_loop *eventLoop, int fd, stru
     }
 }
 
-// 先把channel添加到event loop的链表中,后续再处理
+/**
+ * 先把channel添加到event loop的链表中,后续再处理
+ * @param eventLoop
+ * @param fd
+ * @param channel1
+ * @param type
+ * @return
+ */
 int event_loop_do_channel_event(struct event_loop *eventLoop, int fd, struct channel *channel1, int type) {
     //get the lock
     pthread_mutex_lock(&eventLoop->mutex);
@@ -83,8 +94,14 @@ int event_loop_do_channel_event(struct event_loop *eventLoop, int fd, struct cha
 
 }
 
-// 添加channel到channel map,并加入到poll or epoll的监控事件集合中
-// 先加入到链表,函数 event_loop_handle_pending_channel 才是真正处理的时刻
+/**
+ * 添加channel到channel map,并加入到poll or epoll的监控事件集合中
+ * - 先加入到链表,函数 event_loop_handle_pending_channel 才是真正处理的时刻
+ * @param eventLoop
+ * @param fd
+ * @param channel1
+ * @return
+ */
 int event_loop_add_channel_event(struct event_loop *eventLoop, int fd, struct channel *channel1) {
     return event_loop_do_channel_event(eventLoop, fd, channel1, 1);
 }
@@ -97,11 +114,19 @@ int event_loop_update_channel_event(struct event_loop *eventLoop, int fd, struct
     return event_loop_do_channel_event(eventLoop, fd, channel1, 3);
 }
 
-// 添加channel map的映射(fd对应的channel对象),并加入到poll or epoll的监控事件集合中
-// 场景:(查找调用函数 event_loop_add_channel_event 的地方)
-// 1. 创建线程时,添加对eventLoop->socketPair[1]进行事件监听(读事件)
-// 2. 进入tcp监听时,添加对listen fd进行事件监听
-// 3. 有新的tcp连接时,添加对accept的fd进行事件监听
+/**
+ * 添加channel map的映射(fd对应的channel对象),并加入到poll or epoll的监控事件集合中
+ *
+ * 场景:(查找调用函数 event_loop_add_channel_event 的地方)
+ * 1. 创建线程时,添加对eventLoop->socketPair[1]进行事件监听(读事件)
+ * 2. 进入tcp监听时,添加对listen fd进行事件监听
+ * 3. 有新的tcp连接时,添加对accept的fd进行事件监听
+ *
+ * @param eventLoop
+ * @param fd
+ * @param channel
+ * @return
+ */
 int event_loop_handle_pending_add(struct event_loop *eventLoop, int fd, struct channel *channel) {
     yolanda_msgx("add channel fd == %d, %s", fd, eventLoop->thread_name);
     struct channel_map *map = eventLoop->channelMap;
@@ -153,7 +178,14 @@ int event_loop_handle_pending_remove(struct event_loop *eventLoop, int fd, struc
     return retval;
 }
 
-// 更新channel map的映射
+/**
+ * 更新channel map的映射
+ *
+ * @param eventLoop
+ * @param fd
+ * @param channel
+ * @return
+ */
 int event_loop_handle_pending_update(struct event_loop *eventLoop, int fd, struct channel *channel) {
     yolanda_msgx("update channel fd == %d, %s", fd, eventLoop->thread_name);
     struct channel_map *map = eventLoop->channelMap;
@@ -170,8 +202,14 @@ int event_loop_handle_pending_update(struct event_loop *eventLoop, int fd, struc
     eventDispatcher->update(eventLoop, channel);
 }
 
-// 激活channel的事件回调
-// fd准备好某个事件后,调用此函数执行该事件的回调函数
+/**
+ * 激活channel的事件回调
+ * - fd准备好某个事件后,调用此函数执行该事件的回调函数
+ * @param eventLoop
+ * @param fd
+ * @param revents
+ * @return
+ */
 int channel_event_activate(struct event_loop *eventLoop, int fd, int revents) {
     struct channel_map *map = eventLoop->channelMap;
     yolanda_msgx("activate channel fd == %d, revents=%d, %s", fd, revents, eventLoop->thread_name);
@@ -195,7 +233,11 @@ int channel_event_activate(struct event_loop *eventLoop, int fd, int revents) {
 
 }
 
-// 通过本地套接字向子进程发送消息
+/**
+ * 通过本地套接字向子进程发送消息
+ *
+ * @param eventLoop
+ */
 void event_loop_wakeup(struct event_loop *eventLoop) {
     char one = 'a';
     ssize_t n = write(eventLoop->socketPair[0], &one, sizeof one);
@@ -204,9 +246,13 @@ void event_loop_wakeup(struct event_loop *eventLoop) {
     }
 }
 
-// 本地套接字触发读事件时的回调函数
-// 子线程醒来后,执行此回调函数.
-// 执行完毕后,会接着执行函数 event_loop_run 中的函数 event_loop_handle_pending_channel
+/**
+ * 本地套接字触发读事件时的回调函数
+ * - 子线程醒来后,执行此回调函数
+ * - 执行完毕后,会接着执行函数 event_loop_run 中的函数 event_loop_handle_pending_channel
+ * @param data
+ * @return
+ */
 int handleWakeup(void *data) {
     struct event_loop *eventLoop = (struct event_loop *) data;
     char one;
@@ -217,12 +263,19 @@ int handleWakeup(void *data) {
     yolanda_msgx("wakeup, %s", eventLoop->thread_name);
 }
 
+/**
+ * 初始化主线程event_loop对象
+ * @return
+ */
 struct event_loop *event_loop_init() {
     return event_loop_init_with_name(NULL);
 }
 
-// 每个线程都有一个event_loop对象
-// 使用此函数完成event_loop对象的初始化工作
+/**
+ * 每个线程都有一个event_loop对象(此函数用于初始化event_loop对象)
+ * @param thread_name
+ * @return
+ */
 struct event_loop *event_loop_init_with_name(char *thread_name) {
     struct event_loop *eventLoop = malloc(sizeof(struct event_loop));
     pthread_mutex_init(&eventLoop->mutex, NULL);
@@ -264,8 +317,12 @@ struct event_loop *event_loop_init_with_name(char *thread_name) {
     return eventLoop;
 }
 
-// 进入事件循环
-// 调用dispatch函数进行事件分发,遇到IO执行执行对应的回调函数
+/**
+ * 进入事件循环
+ * - 调用dispatch函数进行事件分发,遇到IO执行执行对应的回调函数
+ * @param eventLoop
+ * @return
+ */
 int event_loop_run(struct event_loop *eventLoop) {
     assert(eventLoop != NULL);
 

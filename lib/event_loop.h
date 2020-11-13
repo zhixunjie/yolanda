@@ -19,24 +19,38 @@ struct channel_element {
 };
 
 /**
- * event loop对象
+ * event_loop对象(每个线程都有一个event对象)
  */
 struct event_loop {
-    int quit;
-    const struct event_dispatcher *eventDispatcher; // 事件分发对象,可以指定poll或epoll
+    int quit;                // 是否退出循环
 
-    void *event_dispatcher_data;          // 对应的event_dispatcher的数据
+    // 事件分发对象
+    // 可以指定poll or epoll
+    const struct event_dispatcher *eventDispatcher;
+    // 对应的event_dispatcher的数据
+    void *event_dispatcher_data;
+
+    // channel相关
     struct channel_map *channelMap;
-
     int is_handle_pending;
-    struct channel_element *pending_head; // 记录链表头,链表用于存放待处理的channel事件
-    struct channel_element *pending_tail; // 记录链表尾
+    // 记录链表头
+    // 链表用于存放待处理的channel事件
+    struct channel_element *pending_head;
+    // 记录链表尾
+    struct channel_element *pending_tail;
 
-    pthread_t owner_thread_id;            // 记录拥有此event loop对象的线程id
-    pthread_mutex_t mutex;                // 互斥锁,用于配合条件变量使用
-    pthread_cond_t cond;                  // 条件变量
-    int socketPair[2];                    // 本地套接字,父线程用来通知子线程有新的事件需要处理。本项目中sockPair[0]用于写入,sockPair[1]用于读取。
-    char *thread_name;                    // 记录线程的名字
+    // 线程同步
+    pthread_t owner_thread_id;                   // 记录拥有此event loop对象的线程id
+    pthread_mutex_t mutex;                       // 互斥锁,用于配合条件变量使用
+    pthread_cond_t cond;                         // 条件变量
+
+    // 本地套接字
+    // 父线程用来通知子线程有新的事件需要处理。
+    // 本项目中sockPair[0]用于写入,sockPair[1]用于读取。
+    int socketPair[2];
+
+    // 记录线程的名字
+    char *thread_name;
 };
 
 struct event_loop *event_loop_init();
